@@ -1,4 +1,4 @@
-# Userscript for solving Wordle
+# Userscript for Wordle
 
 1. install TamperMonkey: https://www.tampermonkey.net/
 2. install [wordle-solver.user.js](https://github.com/JJTimmons/wordle/raw/main/wordle-solver.user.js)
