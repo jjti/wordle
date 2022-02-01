@@ -7,13 +7,12 @@ import * as WORDS from './words.json';
  *
  * @param answer we're benchmarking
  */
-const solve = (answer: string): number => {
-  const solver = new WordleSolver();
+export const solve = (solver: WordleSolver, answer: string): number => {
   const charFreqMap = solver.createEmptyCharFreqMap();
   answer.split('').forEach((c) => (charFreqMap[c] += 1));
 
   const history = [];
-  for (let i = 0; i < 20; i++) {
+  for (let i = 0; i < 10; i++) {
     const guess = solver.guess();
     if (!guess) {
       console.error(solver.left.length);
@@ -35,9 +34,10 @@ const solve = (answer: string): number => {
           guess
             .substring(0, i)
             .split('')
+            .filter((_, j) => j != i)
             .filter((z) => z === c).length === charFreqMap[c]
         ) {
-          return 'f'; // it's a miss but already told user (w/ yellow)
+          return 'f'; // it's a miss but already told user (w/ yellow/green)
         } else {
           return 'm';
         }
@@ -46,24 +46,44 @@ const solve = (answer: string): number => {
     history.push(`answer: ${answer}, guess: ${guess}, result: ${result}`);
     solver.update(guess, result);
   }
-  console.warn(history);
-  throw Error('never solved it');
+  return 10;
 };
 
 describe('Benchmarks', () => {
-  it('can solve', () => {
-    expect(solve('wrung')).toBeLessThan(10);
+  test.only('can solve', () => {
+    expect(solve(new WordleSolver(), 'wrung')).toBeLessThan(10);
   });
 
-  it('current benchmark value', () => {
+  // low score = 979 with 2, 2, 3
+  test('tunes', () => {
     const random = seedrandom('42');
+    const samples = new Array(200).fill(null).map(() => WORDS[Math.round(WORDS.length * random.double())]);
 
-    const summedGuessesRequired = new Array(100)
-      .fill(null)
-      .map(() => WORDS[Math.round(WORDS.length * random.double())])
-      .map(solve)
-      .reduce((acc, v) => acc + v, 0);
+    const hintBumpMultiplier = [2];
+    const hintBumpLeftMultiplier = [2];
+    const duplicateCharPenaltyMultiplier = [3];
 
-    expect(summedGuessesRequired).toBeLessThan(5);
+    const results = [];
+    hintBumpMultiplier.forEach((hbm) => {
+      hintBumpLeftMultiplier.forEach((blm) => {
+        duplicateCharPenaltyMultiplier.forEach((cpm) => {
+          const guesses = samples.map((word) => {
+            const solver = new WordleSolver();
+            solver.hintBumpMultiplier = hbm;
+            solver.hintBumpLeftMultiplier = blm;
+            solver.duplicateCharPenaltyMultiplier = cpm;
+            return solve(solver, word);
+          });
+
+          const total = guesses.reduce((acc, g) => acc + g, 0);
+          results.push([total, hbm, blm, cpm]);
+        });
+      });
+    });
+
+    results.sort();
+    results.forEach((r) => {
+      console.warn(r);
+    });
   });
 });

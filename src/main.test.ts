@@ -1,4 +1,5 @@
 import WordleSolver from './main';
+import { solve } from './benchark.test';
 
 describe('WordleSolver', () => {
   it('creates empty char freq maps', () => {
@@ -6,6 +7,18 @@ describe('WordleSolver', () => {
     expect(Object.values(charFreqMap)).toEqual(new Array(26).fill(0));
     expect(charFreqMap['a']).toEqual(0);
     expect(charFreqMap['z']).toEqual(0);
+  });
+
+  it('has valid hit count', () => {
+    const solver = new WordleSolver(['aback']);
+
+    expect(solver.hitCount()).toEqual(0);
+    expect(solver.nonHits()).toEqual([0, 1, 2, 3, 4]);
+
+    solver.update('zbazz', 'fhhff');
+
+    expect(solver.hitCount()).toEqual(2);
+    expect(solver.nonHits()).toEqual([0, 3, 4]);
   });
 
   it('guesses', () => {
@@ -46,5 +59,23 @@ describe('WordleSolver', () => {
 
     ['aback', 'abask', 'flask'].forEach((word) => expect(solver.left).not.toContain(word));
     expect(solver.left).toContain('utfel');
+  });
+
+  it('removes failed words', () => {
+    const solver = new WordleSolver(['cares', 'soily']); // answer: soily
+
+    solver.update('cares', 'fffff');
+
+    expect(solver.left.length).toBe(0);
+  });
+
+  it('solves (regression tests)', () => {
+    const regression = {
+      light: 4,
+    };
+
+    Object.entries(regression).forEach(([k, v]) => {
+      expect(solve(new WordleSolver(), k)).toBeLessThanOrEqual(v);
+    });
   });
 });

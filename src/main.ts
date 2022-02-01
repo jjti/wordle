@@ -2,7 +2,7 @@ import { question } from 'readline-sync';
 import * as WORDS from './words.json';
 
 /**
- * A really stupid wordle solver.
+ * A really fucking stupid wordle solver.
  */
 export default class WordleSolver {
   // number of guesses used so far
@@ -17,6 +17,15 @@ export default class WordleSolver {
   // yellows from other boxes
   hints: { [char: string]: number }[];
 
+  // multiply hints weight by this much (before adding hintBumpLeftMultiplier)
+  hintBumpMultiplier = 2;
+
+  // bump hints' weight by this much (times this.left.length)
+  hintBumpLeftMultiplier = 2;
+
+  // multiplied by this.left.length, is a penalty applied for duplicates
+  duplicateCharPenaltyMultiplier = 3;
+
   constructor(words: string[] = []) {
     this.left = words.length ? words : [...WORDS];
     this.hints = new Array(5).fill(null).map(() => this.createEmptyCharFreqMap());
@@ -28,6 +37,9 @@ export default class WordleSolver {
 
   /* Number of hits so far */
   hitCount = () => this.hits.filter((c) => c).length;
+
+  /* Non-hit indicies */
+  nonHits = () => this.hits.reduce((acc, hit, i) => (hit ? acc : acc.concat(i)), []);
 
   /**
    * Guess a word. Pick the one with highest summed letter frequencies at that location.
@@ -41,16 +53,27 @@ export default class WordleSolver {
       return charFreqMap;
     });
 
-    const hintBump = this.left.length / (5 - this.hitCount());
+    const hintMultiplier = (charFreq: number, hasHint: number) => {
+      if (!hasHint) return charFreq;
+      return charFreq * this.hintBumpMultiplier + this.left.length * this.hintBumpLeftMultiplier;
+    };
+
+    const duplicatePenalty = (word: string) => {
+      return (
+        (5 - (new Set(this.nonHits().map((i) => word[i])).size + this.hits.length)) *
+        (this.duplicateCharPenaltyMultiplier * this.left.length)
+      );
+    };
+
     let guess: string;
-    let guessScore = -1;
+    let guessScore = Number.MIN_SAFE_INTEGER;
     this.left.forEach((word) => {
-      const letterScores = word.split('').map((c, i) => charFreqMaps[i][c] + this.hints[i][c] * hintBump);
-      const score = letterScores.reduce((acc, v) => acc + v, 0);
+      let score = word
+        .split('')
+        .map((c, i) => hintMultiplier(charFreqMaps[i][c], this.hints[i][c]))
+        .reduce((acc, v) => acc + v, 0);
+      score -= duplicatePenalty(word);
       if (score > guessScore) {
-        if (this.guesses < 2 && this.hitCount() == 0 && new Set(word).size < 5) {
-          return; // try to spread out letters in early guesses
-        }
         guess = word;
         guessScore = score;
       }
@@ -86,16 +109,11 @@ export default class WordleSolver {
         this.left = this.left.filter((word) => word[i] != char);
       } else {
         // this character was a fail
-        if (
-          result
-            .substring(0, i)
-            .split('')
-            .filter((z, i) => z === 'm' && guess[i] == char).length
-        ) {
-          return; // there was a hit/miss with this character though
+        if (result.split('').filter((z, j) => z === 'm' && guess[j] == char).length) {
+          return; // there was a miss with this character though
         }
         this.hints.forEach((hint) => (hint[char] = 0.0));
-        this.left = this.left.filter((word) => !word.substring(i).includes(char));
+        this.left = this.left.filter((word) => this.nonHits().findIndex((j) => word[j] === char) < 0);
       }
     });
   };
