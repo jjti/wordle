@@ -1,5 +1,5 @@
 {
-  "name": "wordle-userscript",
+  "name": "wordle-solver",
   "version": "0.0.0",
   "description": "Creates a UserScript for guessing/solving Wordle",
   "engines": {
@@ -28,7 +28,7 @@
     "start": "node build/src/main.js",
     "clean": "rimraf coverage build dist tmp",
     "prebuild": "npm run lint",
-    "build": "rollup -c && cat ./src/header.txt > /tmp/wordle && cat ./dist/main.js >> /tmp/wordle && cp /tmp/wordle ./userscript.js",
+    "build": "rollup -c && cat ./src/header.txt > /tmp/wordle && cat ./dist/main.js >> /tmp/wordle && cp /tmp/wordle ./wordle-solver.user.js",
     "build:watch": "tsc -w -p tsconfig.release.json",
     "cli": "node ./src/cli.js",
     "lint": "eslint . --ext .ts,.tsx",
