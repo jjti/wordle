@@ -1,5 +1,4 @@
 import WordleSolver from './main';
-import { solve } from './benchark.test';
 
 describe('WordleSolver', () => {
   it('creates empty char freq maps', () => {
@@ -67,15 +66,5 @@ describe('WordleSolver', () => {
     solver.update('cares', 'fffff');
 
     expect(solver.left.length).toBe(0);
-  });
-
-  it('solves (regression tests)', () => {
-    const regression = {
-      light: 4,
-    };
-
-    Object.entries(regression).forEach(([k, v]) => {
-      expect(solve(new WordleSolver(), k)).toBeLessThanOrEqual(v);
-    });
   });
 });

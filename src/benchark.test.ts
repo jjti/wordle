@@ -50,8 +50,15 @@ export const solve = (solver: WordleSolver, answer: string): number => {
 };
 
 describe('Benchmarks', () => {
-  test.only('can solve', () => {
-    expect(solve(new WordleSolver(), 'wrung')).toBeLessThan(10);
+  test.only('solves (regression tests)', () => {
+    const regression = {
+      light: 4,
+      wrung: 5,
+    };
+
+    Object.entries(regression).forEach(([k, v]) => {
+      expect(solve(new WordleSolver(WORDS), k)).toBeLessThanOrEqual(v);
+    });
   });
 
   // low score = 979 with 2, 2, 3
@@ -68,7 +75,7 @@ describe('Benchmarks', () => {
       hintBumpLeftMultiplier.forEach((blm) => {
         duplicateCharPenaltyMultiplier.forEach((cpm) => {
           const guesses = samples.map((word) => {
-            const solver = new WordleSolver();
+            const solver = new WordleSolver(WORDS);
             solver.hintBumpMultiplier = hbm;
             solver.hintBumpLeftMultiplier = blm;
             solver.duplicateCharPenaltyMultiplier = cpm;

@@ -1,0 +1,9 @@
+// ==UserScript==
+// @name         Wordle Solver
+// @namespace    https://github.com/JJTimmons/wordle
+// @version      0.1
+// @description  a really stupid wordle solver
+// @author       jjtimmons
+// @match        https://www.powerlanguage.co.uk/wordle/
+// @grant        none
+// ==/UserScript==
