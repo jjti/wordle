@@ -9,5 +9,5 @@ export default {
     format: 'umd',
     name: 'wordle-solver',
   },
-  plugins: [typescript(), json()],
+  plugins: [typescript(), json({ compact: true })],
 };

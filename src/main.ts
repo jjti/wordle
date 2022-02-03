@@ -1,7 +1,7 @@
 import WORDS from './words.json';
 
 /**
- * A really fucking stupid wordle solver.
+ * A really stupid wordle solver.
  */
 export default class WordleSolver {
   // number of guesses used so far

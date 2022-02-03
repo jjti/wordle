@@ -50,7 +50,7 @@ export const solve = (solver: WordleSolver, answer: string): number => {
 };
 
 describe('Benchmarks', () => {
-  test.only('solves (regression tests)', () => {
+  test('solves (regression tests)', () => {
     const regression = {
       light: 4,
       wrung: 5,
@@ -61,7 +61,7 @@ describe('Benchmarks', () => {
     });
   });
 
-  // low score = 979 with 2, 2, 3
+  // low score = 956 with 2, 2, 3
   test('tunes', () => {
     const random = seedrandom('42');
     const samples = new Array(200).fill(null).map(() => WORDS[Math.round(WORDS.length * random.double())]);
