@@ -50,7 +50,7 @@ export const solve = (solver: WordleSolver, answer: string): number => {
 };
 
 describe('Benchmarks', () => {
-  test('solves (regression tests)', () => {
+  test.only('solves (regression tests)', () => {
     const regression = {
       light: 4,
       wrung: 5,
