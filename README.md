@@ -4,6 +4,6 @@
 2. install [wordle-solver.user.js](https://github.com/JJTimmons/wordle/raw/main/wordle-solver.user.js)
 3. use guesses in header
 
-<img width="1124" alt="Screen Shot 2022-01-31 at 10 10 13 PM" src="https://user-images.githubusercontent.com/13923102/151907681-f341c96e-a287-461b-8132-baf9ae02fdf2.png">
+<img width="825" alt="Screen Shot 2022-02-05 at 9 02 46 PM" src="https://user-images.githubusercontent.com/13923102/152665194-bafe5f34-6826-41aa-9fd8-2f5c40eef347.png">
 
 It uses the letter frequencies of all remaining words to guess the next one.
