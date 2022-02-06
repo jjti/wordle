@@ -1,6 +1,7 @@
 import * as seedrandom from 'seedrandom';
 import WordleSolver from './main';
 import * as WORDS from './words.json';
+import * as BENCHMARK from './benchmark.json';
 
 /**
  * Return the number of guesses required to answer the question.
@@ -8,13 +9,10 @@ import * as WORDS from './words.json';
  * @param answer we're benchmarking
  */
 export const solve = (solver: WordleSolver, answer: string): number => {
-  const charFreqMap = solver.createEmptyCharFreqMap();
-  answer.split('').forEach((c) => (charFreqMap[c] += 1));
-
   const history = [];
   for (let i = 0; i < 10; i++) {
     const guess = solver.guess();
-    if (!guess) {
+    if (!guess || solver.guesses > 10) {
       console.error(solver.left.length);
       console.warn(history);
       throw Error('Ran out of words');
@@ -23,37 +21,45 @@ export const solve = (solver: WordleSolver, answer: string): number => {
       return solver.guesses;
     }
 
-    const result = guess
-      .split('')
-      .map((c, i) => {
-        if (c == answer[i]) {
-          return 'h';
-        } else if (!answer.includes(c)) {
-          return 'f';
-        } else if (
-          guess
-            .substring(0, i)
-            .split('')
-            .filter((_, j) => j != i)
-            .filter((z) => z === c).length === charFreqMap[c]
-        ) {
-          return 'f'; // it's a miss but already told user (w/ yellow/green)
-        } else {
-          return 'm';
-        }
-      })
-      .join('');
-    history.push(`answer: ${answer}, guess: ${guess}, result: ${result}`);
+    const missCount = solver.createEmptyCharFreqMap();
+    answer.split('').forEach((c) => (missCount[c] += 1));
+
+    const results = new Array(5).fill(null);
+    guess.split('').forEach((c, i) => {
+      if (c == answer[i]) {
+        results[i] = 'h';
+        missCount[c] -= 1;
+      } else if (!answer.includes(c)) {
+        results[i] = 'f';
+      }
+    });
+
+    guess.split('').forEach((c, i) => {
+      if (c == answer[i]) {
+        return;
+      } else if (c != answer[i] && missCount[c]) {
+        results[i] = 'm';
+        missCount[c] -= 1;
+      } else {
+        results[i] = 'f';
+      }
+    });
+
+    const result = results.join('');
+    history.push(`answer: ${answer}, guess: ${guess}, result: ${result}, left: ${solver.left.length}`);
     solver.update(guess, result);
   }
   return 10;
 };
 
 describe('Benchmarks', () => {
-  test.only('solves (regression tests)', () => {
+  test('solves (regression tests)', () => {
     const regression = {
+      squid: 4,
       light: 4,
-      wrung: 5,
+      wrung: 4,
+      yahoo: 4,
+      wafer: 4,
     };
 
     Object.entries(regression).forEach(([k, v]) => {
@@ -61,31 +67,23 @@ describe('Benchmarks', () => {
     });
   });
 
-  // low score = 956 with 2, 2, 3
-  test('tunes', () => {
+  // low score = 1242
+  test('benchmark', () => {
     const random = seedrandom('42');
-    const samples = new Array(200).fill(null).map(() => WORDS[Math.round(WORDS.length * random.double())]);
+    const samples = new Array(300).fill(null).map(() => BENCHMARK[Math.round(BENCHMARK.length * random.double())]);
 
-    const hintBumpMultiplier = [2];
-    const hintBumpLeftMultiplier = [2];
-    const duplicateCharPenaltyMultiplier = [3];
+    const duplicateCharPenaltyMultiplier = [1];
 
     const results = [];
-    hintBumpMultiplier.forEach((hbm) => {
-      hintBumpLeftMultiplier.forEach((blm) => {
-        duplicateCharPenaltyMultiplier.forEach((cpm) => {
-          const guesses = samples.map((word) => {
-            const solver = new WordleSolver(WORDS);
-            solver.hintBumpMultiplier = hbm;
-            solver.hintBumpLeftMultiplier = blm;
-            solver.duplicateCharPenaltyMultiplier = cpm;
-            return solve(solver, word);
-          });
-
-          const total = guesses.reduce((acc, g) => acc + g, 0);
-          results.push([total, hbm, blm, cpm]);
-        });
+    duplicateCharPenaltyMultiplier.forEach((cpm) => {
+      const guesses = samples.map((word) => {
+        const solver = new WordleSolver(WORDS);
+        solver.duplicateCharPenaltyMultiplier = cpm;
+        return solve(solver, word);
       });
+
+      const total = guesses.reduce((acc, g) => acc + g, 0);
+      results.push([total, cpm]);
     });
 
     results.sort();

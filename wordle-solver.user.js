@@ -24,18 +24,14 @@
             this.guesses = 0;
             // greens
             this.hits = new Array(5).fill(null);
-            // multiply hints weight by this much (before adding hintBumpLeftMultiplier)
-            this.hintBumpMultiplier = 2;
-            // bump hints' weight by this much (times this.left.length)
-            this.hintBumpLeftMultiplier = 2;
-            // multiplied by this.left.length, is a penalty applied for duplicates
-            this.duplicateCharPenaltyMultiplier = 3;
-            /* Create an empty char freq map */
+            // Create an empty char freq map
             this.createEmptyCharFreqMap = () => 'abcdefghijklmnopqrstuvwxyz'.split('').reduce((acc, c) => (Object.assign(Object.assign({}, acc), { [c]: 0.0 })), {});
-            /* Number of hits so far */
+            // Number of hits so far
             this.hitCount = () => this.hits.filter((c) => c).length;
-            /* Non-hit indicies */
+            // Non-hit indicies
             this.nonHits = () => this.hits.reduce((acc, hit, i) => (hit ? acc : acc.concat(i)), []);
+            // multiplied by this.left.length, is a penalty applied for duplicates
+            this.duplicateCharPenaltyMultiplier = 1;
             /**
              * Guess a word. Pick the one with highest summed letter frequencies at that location.
              */
@@ -47,23 +43,19 @@
                     });
                     return charFreqMap;
                 });
-                const hintMultiplier = (charFreq, hasHint) => {
-                    if (!hasHint)
-                        return charFreq;
-                    return charFreq * this.hintBumpMultiplier + this.left.length * this.hintBumpLeftMultiplier;
-                };
+                const nonHits = this.nonHits();
                 const duplicatePenalty = (word) => {
-                    return ((5 - (new Set(this.nonHits().map((i) => word[i])).size + this.hits.length)) *
-                        (this.duplicateCharPenaltyMultiplier * this.left.length));
+                    return ((5 - (new Set(nonHits.map((i) => word[i])).size + this.hits.length)) *
+                        this.duplicateCharPenaltyMultiplier *
+                        this.left.length);
+                };
+                const rarityPenalty = (i) => {
+                    return this.guesses * (this.left.length * (i / this.left.length));
                 };
                 let guess;
                 let guessScore = Number.MIN_SAFE_INTEGER;
-                this.left.forEach((word) => {
-                    let score = word
-                        .split('')
-                        .map((c, i) => hintMultiplier(charFreqMaps[i][c], this.hints[i][c]))
-                        .reduce((acc, v) => acc + v, 0);
-                    score -= duplicatePenalty(word);
+                this.left.forEach((word, i) => {
+                    const score = word.split('').reduce((acc, c, i) => acc + charFreqMaps[i][c], 0) - duplicatePenalty(word) - rarityPenalty(i);
                     if (score > guessScore) {
                         guess = word;
                         guessScore = score;
@@ -80,31 +72,29 @@
              */
             this.update = (guess, result) => {
                 result = result.toLowerCase();
-                result.split('').forEach((c, i) => {
+                const resultChars = result.split('');
+                resultChars.forEach((c, i) => {
                     const char = guess[i];
                     if (c === 'h') {
                         // this character was a hit (green)
                         this.hits[i] = char;
-                        this.hints.forEach((hint) => (hint[char] = 0.0));
                         this.left = this.left.filter((word) => word[i] == char);
                     }
-                    else if (c === 'm') {
+                });
+                const nonHits = this.nonHits();
+                resultChars.forEach((c, i) => {
+                    const char = guess[i];
+                    if (c === 'm') {
                         // this character was a miss (yellow)
-                        this.hints[i][char] = 0;
-                        new Array(5).fill(null).forEach((_, j) => {
-                            if (i != j) {
-                                this.hints[j][char] = 1;
-                            }
-                        });
                         this.left = this.left.filter((word) => word[i] != char);
+                        this.left = this.left.filter((word) => nonHits.findIndex((j) => word[j] == char) >= 0);
                     }
-                    else {
+                    else if (c === 'f') {
                         // this character was a fail
-                        if (result.split('').filter((z, j) => z === 'm' && guess[j] == char).length) {
+                        if (resultChars.filter((z, j) => z === 'm' && guess[j] == char).length) {
                             return; // there was a miss with this character though
                         }
-                        this.hints.forEach((hint) => (hint[char] = 0.0));
-                        this.left = this.left.filter((word) => this.nonHits().findIndex((j) => word[j] === char) < 0);
+                        this.left = this.left.filter((word) => nonHits.findIndex((j) => word[j] === char) < 0);
                     }
                 });
             };
@@ -119,8 +109,6 @@
             };
             /**
              * Get the row currently being guessed.
-             *
-             * @returns row being guessed
              */
             this.getActiveRow = () => {
                 const rows = document.getElementsByTagName('game-app')[0].shadowRoot.children[1].getElementsByTagName('game-row');
@@ -128,8 +116,6 @@
             };
             /**
              * Return the result of last guess.
-             *
-             * @returns result of last guess
              */
             this.getResult = () => {
                 const activeRow = this.getActiveRow();
@@ -157,7 +143,6 @@
                 return [guess, result];
             };
             this.left = words.length ? words : [...WORDS];
-            this.hints = new Array(5).fill(null).map(() => this.createEmptyCharFreqMap());
         }
     }
     /**

@@ -37,19 +37,6 @@ describe('WordleSolver', () => {
     expect(solver.hits).toEqual([null, 'a', 'c', 'k', 's']);
   });
 
-  it('updates misses', () => {
-    const solver = new WordleSolver(['zazzz']); // answer: zazzz
-
-    solver.update('bbabb', 'ffmff');
-    expect(new Array(5).fill(null).map((_, i) => solver.hints[i]['a'])).toEqual([1, 1, 0, 1, 1]);
-
-    solver.update('bzbbb', 'fmfff');
-    expect(new Array(5).fill(null).map((_, i) => solver.hints[i]['z'])).toEqual([1, 0, 1, 1, 1]);
-
-    solver.update('zbbbb', 'hffff');
-    expect(new Array(5).fill(null).map((_, i) => solver.hints[i]['z'])).toEqual([0, 0, 0, 0, 0]);
-  });
-
   it('updates fails', () => {
     const solver = new WordleSolver(['aback', 'abask', 'flask', 'utfel']);
     expect(solver.left).toContain('aback');
