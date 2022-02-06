@@ -1,18 +1,18 @@
 import * as seedrandom from 'seedrandom';
 import WordleSolver from './main';
-import * as WORDS from './words.json';
-import * as BENCHMARK from './benchmark.json';
+import * as WORDS from './data/wordle.words.json';
+import * as BENCHMARK from './data/wordle.benchmark.json';
 
 /**
  * Return the number of guesses required to answer the question.
  *
  * @param answer we're benchmarking
  */
-export const solve = (solver: WordleSolver, answer: string): number => {
+export const solve = (solver: WordleSolver, answer: string, expected = 10): number => {
   const history = [];
   for (let i = 0; i < 10; i++) {
     const guess = solver.guess();
-    if (!guess || solver.guesses > 10) {
+    if (!guess || solver.guesses > expected) {
       console.error(solver.left.length);
       console.warn(history);
       throw Error('Ran out of words');
@@ -49,25 +49,26 @@ export const solve = (solver: WordleSolver, answer: string): number => {
     history.push(`answer: ${answer}, guess: ${guess}, result: ${result}, left: ${solver.left.length}`);
     solver.update(guess, result);
   }
+
   return 10;
 };
 
 describe('Benchmarks', () => {
   test('solves (regression tests)', () => {
     const regression = {
-      squid: 4,
+      squid: 5,
       light: 4,
       wrung: 4,
       yahoo: 4,
-      wafer: 4,
+      wafer: 6,
     };
 
     Object.entries(regression).forEach(([k, v]) => {
-      expect(solve(new WordleSolver(WORDS), k)).toBeLessThanOrEqual(v);
+      expect(solve(new WordleSolver(WORDS), k, v)).toBeLessThanOrEqual(v);
     });
   });
 
-  // low score = 1242
+  // low score = 1149
   test('benchmark', () => {
     const random = seedrandom('42');
     const samples = new Array(300).fill(null).map(() => BENCHMARK[Math.round(BENCHMARK.length * random.double())]);

@@ -1,4 +1,4 @@
-import WORDS from './words.json';
+import WORDS from './data/wordle.words.json';
 
 /**
  * A really stupid wordle solver.
