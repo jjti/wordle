@@ -5,6 +5,7 @@
 // @description  a really stupid wordle solver
 // @author       jjtimmons
 // @match        https://www.powerlanguage.co.uk/wordle/
+// @match        https://www.nytimes.com/games/wordle/index.html
 // @grant        none
 // ==/UserScript==
 (function (global, factory) {
@@ -104,8 +105,9 @@
              * @param guess to update header to
              */
             this.setTitle = (guess) => {
-                document.getElementsByTagName('game-app')[0].shadowRoot.children[1].getElementsByClassName('title')[0].textContent = guess;
-                console.log(`guess ${this.guesses}: ${guess}; words left: ${this.left.length}`);
+                document.getElementsByTagName('game-app')[0].shadowRoot.children[1].getElementsByClassName('title')[0].textContent =
+                    guess.toUpperCase();
+                console.log(`guess ${this.guesses}: ${guess.toUpperCase()}; words left: ${this.left.length}`);
             };
             /**
              * Get the row currently being guessed.

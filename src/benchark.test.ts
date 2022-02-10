@@ -54,7 +54,7 @@ export const solve = (solver: WordleSolver, answer: string, expected = 10): numb
 };
 
 describe('Benchmarks', () => {
-  test('solves (regression tests)', () => {
+  test.only('solves (regression tests)', () => {
     const regression = {
       squid: 5,
       light: 3,
@@ -70,26 +70,24 @@ describe('Benchmarks', () => {
 
   // low score = 1149
   test('benchmark', () => {
+    const n = 1000;
     const random = seedrandom('42');
-    const samples = new Array(1000).fill(null).map(() => BENCHMARK[Math.round(BENCHMARK.length * random.double())]);
+    const samples = new Array(n).fill(null).map(() => BENCHMARK[Math.round(BENCHMARK.length * random.double())]);
 
-    const duplicateCharPenaltyMultiplier = [1];
-
-    const results = [];
-    const hist = new Array(10).fill(null).map((_) => 0);
-    duplicateCharPenaltyMultiplier.forEach((cpm) => {
-      const guesses = samples.map((word) => {
-        const solver = new WordleSolver(WORDS);
-        solver.duplicateCharPenaltyMultiplier = cpm;
-        return solve(solver, word);
-      });
-
-      guesses.forEach((g) => (hist[g] += 1));
-      const total = guesses.reduce((acc, g) => acc + g, 0);
-      results.push([total, cpm]);
+    const hist = new Array(10).fill(null).map(() => 0);
+    const guesses = samples.map((word) => {
+      const solver = new WordleSolver(WORDS);
+      return solve(solver, word);
     });
 
-    console.warn([results[0], hist.map((v) => v)]);
+    guesses.forEach((g) => (hist[g] += 1));
+    const total = guesses.reduce((acc, g) => acc + g, 0);
+
+    console.warn(
+      total,
+      total / n,
+      hist.map((v) => v),
+    );
 
     let histResult = 'guesses (10s)\n';
     hist.forEach((c, i) => {

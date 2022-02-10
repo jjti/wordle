@@ -112,8 +112,9 @@ export default class WordleSolver {
    * @param guess to update header to
    */
   setTitle = (guess: string) => {
-    document.getElementsByTagName('game-app')[0].shadowRoot.children[1].getElementsByClassName('title')[0].textContent = guess;
-    console.log(`guess ${this.guesses}: ${guess}; words left: ${this.left.length}`);
+    document.getElementsByTagName('game-app')[0].shadowRoot.children[1].getElementsByClassName('title')[0].textContent =
+      guess.toUpperCase();
+    console.log(`guess ${this.guesses}: ${guess.toUpperCase()}; words left: ${this.left.length}`);
   };
 
   /**
