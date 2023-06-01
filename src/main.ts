@@ -112,17 +112,24 @@ export default class WordleSolver {
    * @param guess to update header to
    */
   setTitle = (guess: string) => {
-    document.getElementsByTagName('game-app')[0].shadowRoot.children[1].getElementsByClassName('title')[0].textContent =
-      guess.toUpperCase();
-    console.log(`guess ${this.guesses}: ${guess.toUpperCase()}; words left: ${this.left.length}`);
+    try {
+      document.getElementsByClassName('wordle-app-header')[0].children[1].textContent = guess.toUpperCase();
+      console.log(`guess ${this.guesses}: ${guess.toUpperCase()}; words left: ${this.left.length}`);
+    } catch (error) {
+      console.error(`failed to set header: ${error}`)
+    }
   };
 
   /**
    * Get the row currently being guessed.
    */
   getActiveRow = () => {
-    const rows = document.getElementsByTagName('game-app')[0].shadowRoot.children[1].getElementsByTagName('game-row');
-    return rows[this.guesses - 1];
+    try {
+      const rows = document.getElementById('wordle-app-game').children[0].children[0].children;
+      return rows[this.guesses - 1];
+    } catch {
+      return null;
+    }
   };
 
   /**
@@ -130,14 +137,14 @@ export default class WordleSolver {
    */
   getResult = () => {
     const activeRow = this.getActiveRow();
-    if (!activeRow || !activeRow.getAttribute('letters') || activeRow.getAttribute('letters').length !== 5) {
+    if (!activeRow || !activeRow.textContent || activeRow.textContent.length !== 5) {
       return [null, null];
     }
-    const guess = activeRow.getAttribute('letters');
+    const guess = activeRow.textContent;
 
     let result = '';
-    for (const box of this.getActiveRow().shadowRoot.children[1].children) {
-      const evaluation = box.getAttribute('evaluation');
+    for (const box of this.getActiveRow().children) {
+      const evaluation = box.children[0].getAttribute('data-state');
       if (!evaluation || !evaluation.length) {
         return [null, null];
       }
@@ -146,8 +153,12 @@ export default class WordleSolver {
         result += 'f';
       } else if (evaluation === 'present') {
         result += 'm';
-      } else {
+      } else if (evaluation === 'correct') {
         result += 'h';
+      } else if (evaluation === 'tbd') {
+        return [null, null];
+      } else {
+        console.error(`unexpected result: ${evaluation}`)
       }
     }
 
